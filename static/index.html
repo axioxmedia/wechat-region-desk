@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>微信地区打标台</title>
+  <link rel="icon" href="/brand/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body class="aio-app axiox-shell">
+  <div class="bg-grid"></div>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <img class="mark" src="/brand/logo.png" alt="" />
+        <div>
+          <h1 data-i18n="app.title">微信地区打标台</h1>
+          <p data-i18n="app.subtitle">读取电脑微信「地区」，按地域写入标签</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span class="chip" id="winChip">—</span>
+        <div class="lang-switch">
+          <button type="button" id="langZh" class="on">中文</button>
+          <button type="button" id="langEn">EN</button>
+        </div>
+      </div>
+    </header>
+
+    <nav class="steps" id="stepNav"></nav>
+
+    <section class="workspace">
+      <article class="wizard-card on" id="stage0">
+        <div class="kicker">Step 01</div>
+        <h2 data-i18n="s0.h">打开通讯录管理</h2>
+        <p class="lead" data-i18n="s0.lead">本工具只驱动已经打开的微信窗口。请先登录电脑微信 4.1，并打开「通讯录 → 通讯录管理」。</p>
+        <div class="status-grid">
+          <div class="stat"><span data-i18n="s0.plat">系统</span><strong id="stPlat">—</strong></div>
+          <div class="stat"><span data-i18n="s0.win">窗口</span><strong id="stWin">—</strong></div>
+          <div class="stat"><span data-i18n="s0.cls">类名</span><strong id="stCls">—</strong></div>
+        </div>
+        <label data-i18n="s0.ver">微信版本（备忘）</label>
+        <input type="text" id="wechatVersion" value="4.1.13.65" />
+        <label class="check">
+          <input type="checkbox" id="remember" checked />
+          <span data-i18n="mem">记住本次选择</span>
+        </label>
+        <p class="hint" id="s0hint"></p>
+        <div class="actions">
+          <button type="button" class="ghost" id="btnRefresh" data-i18n="s0.refresh">重新检测</button>
+          <button type="button" class="primary" id="btnNext0" data-i18n="next">下一步</button>
+        </div>
+      </article>
+
+      <article class="wizard-card" id="stage1">
+        <div class="kicker">Step 02</div>
+        <h2 data-i18n="s1.h">标签取地区第一段</h2>
+        <p class="lead" data-i18n="s1.lead">不必手填城市词。读到「地区」后，取空格前的第一段作为标签。</p>
+        <div class="rule-box">
+          <div>广东 深圳 → <b>广东</b></div>
+          <div>马来西亚 吉隆坡 吉隆坡 → <b>马来西亚</b></div>
+          <div>中国香港 → <b>中国香港</b></div>
+          <div>新加坡 → <b>新加坡</b></div>
+        </div>
+        <input type="hidden" id="hkKeys" />
+        <input type="hidden" id="tagPrefix" />
+        <div class="two">
+          <div>
+            <label data-i18n="s1.empty">空地区标签</label>
+            <input type="text" id="emptyTag" />
+          </div>
+          <div>
+            <label data-i18n="s1.pause">扫描间隔（秒）</label>
+            <input type="text" id="scanPause" value="0.45" />
+          </div>
+        </div>
+        <div>
+          <label data-i18n="s1.len">标签最大字数</label>
+          <input type="text" id="maxLen" />
+        </div>
+        <label class="check">
+          <input type="checkbox" id="onlyHk" />
+          <span data-i18n="s1.onlyhk">打标阶段只处理香港好友</span>
+        </label>
+        <div class="actions">
+          <button type="button" class="ghost" data-back="0" data-i18n="back">上一步</button>
+          <button type="button" class="primary" id="btnNext1" data-i18n="next">下一步</button>
+        </div>
+      </article>
+
+      <article class="wizard-card" id="stage2">
+        <div class="kicker">Step 03</div>
+        <h2 data-i18n="s2.h">探测窗口控件</h2>
+        <p class="lead" data-i18n="s2.lead">微信 4.x 把名单画在自绘层上，控件树通常只有三行，这是正常结果，不是卡住。探测完成后请点右下角「下一步」。</p>
+        <p class="hint" id="probeHint"></p>
+        <pre class="tree" id="treeBox" data-i18n="s2.empty">尚未探测</pre>
+        <div class="actions">
+          <button type="button" class="ghost" data-back="1" data-i18n="back">上一步</button>
+          <button type="button" class="soft" id="btnInspect" data-i18n="s2.run">探测</button>
+          <button type="button" class="primary" id="btnNext2" data-i18n="next">下一步</button>
+        </div>
+      </article>
+
+      <article class="wizard-card" id="stage3">
+        <div class="kicker">Step 04</div>
+        <h2 data-i18n="sc.h">在截图上标定点击位置</h2>
+        <p class="lead" data-i18n="sc.lead">拍摄前会把通讯录管理改成 1307×849，再截图并按参考图标出点击位。不对再用方向键微调。</p>
+        <label class="check">
+          <input type="checkbox" id="autoAlign" />
+          <span data-i18n="sc.align">自动对齐（默认开）</span>
+        </label>
+        <div class="cal-modes" id="calModes">
+          <button type="button" class="chip-btn on" data-mode="search" data-i18n="sc.search">1 搜索框</button>
+          <button type="button" class="chip-btn" data-mode="check" data-i18n="sc.check">2 第一行圆圈</button>
+          <button type="button" class="chip-btn" data-mode="avatar" data-i18n="sc.avatar">3 第一行头像</button>
+          <button type="button" class="chip-btn" data-mode="row2" data-i18n="sc.row2">4 第二行头像</button>
+        </div>
+        <div class="cal-shot" id="calShot">
+          <img id="calImg" alt="" />
+          <div id="calMarks"></div>
+        </div>
+        <p class="hint" id="calHint"></p>
+        <div class="actions">
+          <button type="button" class="ghost" data-back="2" data-i18n="back">上一步</button>
+          <button type="button" class="soft" id="btnSnap" data-i18n="sc.snap">拍摄窗口</button>
+          <button type="button" class="soft" id="btnUseAuto">使用自动点</button>
+          <button type="button" class="soft" id="btnSaveCal">保存校点</button>
+          <button type="button" class="soft" id="btnClearOne" data-i18n="sc.clear1">清除当前点</button>
+          <button type="button" class="soft" id="btnClearAll" data-i18n="sc.clearall">清除全部</button>
+          <button type="button" class="soft" id="btnNudgeL" title="-1px">←</button>
+          <button type="button" class="soft" id="btnNudgeR" title="+1px">→</button>
+          <button type="button" class="soft" id="btnNudgeU" title="-1px">↑</button>
+          <button type="button" class="soft" id="btnNudgeD" title="+1px">↓</button>
+          <button type="button" class="soft" id="btnTestClick" data-i18n="sc.test">试点击当前点</button>
+          <button type="button" class="primary" id="btnNextCal" data-i18n="next">下一步</button>
+        </div>
+      </article>
+
+      <article class="wizard-card" id="stage4">
+        <div class="kicker">Step 05</div>
+        <h2 data-i18n="s3.h">扫描好友地区</h2>
+        <p class="lead" data-i18n="s3.lead">程序会逐个点开头像读取「地区」。请先试扫 15 人，确认无误再全量。</p>
+        <label class="check">
+          <input type="checkbox" id="scanAll" />
+          <span data-i18n="s3.all">扫描全部好友</span>
+        </label>
+        <label data-i18n="s3.limit">试扫人数</label>
+        <input type="text" id="scanLimit" value="15" />
+        <p class="hint" data-i18n="s3.warn">扫描时请不要操作鼠标键盘，也不要按 Esc。Esc 会关掉通讯录管理。</p>
+        <div class="actions">
+          <button type="button" class="ghost" data-back="3" data-i18n="back">上一步</button>
+          <button type="button" class="primary" id="btnScan" data-i18n="s3.run">开始扫描</button>
+        </div>
+      </article>
+
+      <article class="wizard-card" id="stage5">
+        <div class="kicker">Step 06</div>
+        <h2 data-i18n="s4.h">核对打标计划</h2>
+        <p class="lead" data-i18n="s4.lead">香港行以绿色标出。可直接改 tag_name，合并过细的城市后再写入。</p>
+        <div class="status-grid" id="countRow"></div>
+        <div class="table-wrap">
+          <table id="planTable">
+            <thead>
+              <tr><th>tag</th><th>n</th><th>sample</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="table-wrap tall">
+          <table id="rowTable">
+            <thead>
+              <tr><th>nickname</th><th>region</th><th>tag</th><th>HK</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="actions">
+          <button type="button" class="ghost" data-back="4" data-i18n="back">上一步</button>
+          <button type="button" class="soft" id="btnSaveRows" data-i18n="s4.save">保存修改</button>
+          <a class="soft linkbtn" id="btnXlsx" href="/api/export.xlsx" data-i18n="s4.xlsx">下载 Excel</a>
+          <button type="button" class="primary" id="btnNext4" data-i18n="next">下一步</button>
+        </div>
+      </article>
+
+      <article class="wizard-card" id="stage6">
+        <div class="kicker">Step 07</div>
+        <h2 data-i18n="s5.h">写入微信标签</h2>
+        <p class="lead" data-i18n="s5.lead">按计划搜索昵称、勾选并添加标签。完成后请在「标签」栏抽查。</p>
+        <p class="hint" id="applyHint"></p>
+        <div class="result" id="applyResult" hidden></div>
+        <div class="actions">
+          <button type="button" class="ghost" data-back="5" data-i18n="back">上一步</button>
+          <button type="button" class="primary" id="btnApply" data-i18n="s5.run">开始打标</button>
+        </div>
+      </article>
+    </section>
+  </div>
+
+  <div class="overlay" id="loading" hidden>
+    <div class="overlay-box wide">
+      <div class="pack-live">
+        <div class="spin"></div>
+        <div>
+          <h3 id="packTitle">Working</h3>
+          <p id="packStage">—</p>
+        </div>
+      </div>
+      <div class="progress-row">
+        <div class="progress"><i id="packBar"></i></div>
+        <span id="packPct">0%</span>
+      </div>
+      <div class="terminal in-overlay" id="packLog"></div>
+      <button type="button" class="ghost" id="btnStop" data-i18n="stop">停止</button>
+    </div>
+  </div>
+
+  <footer class="app-version">v1.1.0</footer>
+  <script src="/assets/app.js"></script>
+</body>
+</html>

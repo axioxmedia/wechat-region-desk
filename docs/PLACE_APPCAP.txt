@@ -1,0 +1,3 @@
+Drop APPCap.png here for the GitHub README preview slot.
+Local path: wechat-region-desk/docs/APPCap.png
+GitHub upload: .../upload/main/docs

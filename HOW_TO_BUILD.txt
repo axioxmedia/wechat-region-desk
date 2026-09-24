@@ -1,0 +1,9 @@
+WeChat Region Desk - Windows build
+
+1. Install Python 3.11 or 3.12 from python.org. Check Add python.exe to PATH.
+2. Unzip this folder.
+3. Double-click build_exe.bat
+4. Result: dist\WeChatRegionDesk.exe
+5. Alternate: powershell -ExecutionPolicy Bypass -File .\build_exe.ps1
+
+If the windowed EXE fails to start, send dist\deploy_desk.log.
